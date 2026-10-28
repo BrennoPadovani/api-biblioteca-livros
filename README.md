@@ -3,9 +3,9 @@
 API para cadastrar, listar, buscar, atualizar e remover livros, usando Spring Data JPA e banco H2 em memória.
 
 ## Tecnologias
-- Java 17+ (testado com 21)
-- Spring Boot 4.1.1 (Spring Web, Spring Data JPA)
-- H2 Database
+- Java 21+
+- Spring Boot 4.1.1 (Spring Web MVC, Spring Data JPA)
+- H2 Database (console em `/h2-ui`)
 - Maven
 
 ## Como executar
@@ -17,11 +17,16 @@ A API sobe em `http://localhost:8080`.
 ## Endpoints
 | Método | URL | Descrição |
 |--------|-----|-----------|
-| POST | /livros | Cadastra um livro |
-| GET | /livros | Lista todos os livros |
-| GET | /livros/{id} | Busca um livro pelo ID |
-| PUT | /livros/{id} | Atualiza um livro |
-| DELETE | /livros/{id} | Remove um livro |
+| POST | /api/livros | Cadastra um livro |
+| GET | /api/livros | Lista todos os livros (aceita `?titulo=texto`) |
+| GET | /api/livros/{id} | Busca um livro pelo ID |
+| GET | /api/livros/autor/{autor} | Lista os livros de um autor |
+| PUT | /api/livros/{id} | Atualiza um livro |
+| DELETE | /api/livros/{id} | Remove um livro |
+| DELETE | /api/livros | Remove todos os livros |
+
+## Console do banco H2
+`http://localhost:8080/h2-ui` — JDBC URL: `jdbc:h2:mem:testdb`, usuário `sa`, senha vazia.
 
 ## Exemplo de corpo (POST/PUT)
 ```json

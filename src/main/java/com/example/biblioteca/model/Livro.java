@@ -1,23 +1,29 @@
 package com.example.biblioteca.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "livros")
 public class Livro {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(name = "titulo")
     private String titulo;
+
+    @Column(name = "autor")
     private String autor;
+
+    @Column(name = "isbn")
     private String isbn;
+
+    @Column(name = "ano_publicacao")
     private Integer anoPublicacao;
 
     public Livro() {
+        // Construtor padrão vazio, necessário para o JPA.
     }
 
     public Livro(String titulo, String autor, String isbn, Integer anoPublicacao) {
@@ -29,10 +35,6 @@ public class Livro {
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getTitulo() {
@@ -65,5 +67,12 @@ public class Livro {
 
     public void setAnoPublicacao(Integer anoPublicacao) {
         this.anoPublicacao = anoPublicacao;
+    }
+
+    @Override
+    public String toString() {
+        return "Livro [id=" + id + ", titulo=" + titulo
+                + ", autor=" + autor + ", isbn=" + isbn
+                + ", anoPublicacao=" + anoPublicacao + "]";
     }
 }

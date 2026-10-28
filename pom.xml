@@ -18,7 +18,7 @@
     <description>API REST para gerenciar uma biblioteca virtual</description>
 
     <properties>
-        <!-- Troque pela versão do seu computador (java -version). Precisa ser 17 ou maior. -->
+        <!-- Precisa ser igual ou menor que o Java instalado (java -version). Mínimo 17. -->
         <java.version>21</java.version>
     </properties>
 
@@ -30,6 +30,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- Console web do H2 (no Spring Boot 4 é um módulo separado) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

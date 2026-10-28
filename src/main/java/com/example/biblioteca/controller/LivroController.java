@@ -1,73 +1,126 @@
 package com.example.biblioteca.controller;
 
-import com.example.biblioteca.model.Livro;
-import com.example.biblioteca.repository.LivroRepository;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.example.biblioteca.model.Livro;
+import com.example.biblioteca.repository.LivroRepository;
 
+@CrossOrigin(origins = "http://localhost:8081")
 @RestController
-@RequestMapping("/livros")
+@RequestMapping("/api")
 public class LivroController {
 
-    private final LivroRepository livroRepository;
+    @Autowired
+    LivroRepository livroRepository;
 
-    public LivroController(LivroRepository livroRepository) {
-        this.livroRepository = livroRepository;
-    }
+    // Lista todos os livros (ou filtra pelo título com ?titulo=...)
+    @GetMapping("/livros")
+    public ResponseEntity<List<Livro>> listarLivros(
+            @RequestParam(required = false) String titulo) {
+        try {
+            List<Livro> livros = livroRepository.findAll();
 
-    // Cadastra um novo livro
-    @PostMapping
-    public ResponseEntity<Livro> criarLivro(@RequestBody Livro livro) {
-        livro.setId(null); // garante que o banco gere o id
-        Livro salvo = livroRepository.save(livro);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
-    }
+            if (titulo != null) {
+                livros = livroRepository.findByTituloContaining(titulo);
+            }
 
-    // Lista todos os livros
-    @GetMapping
-    public List<Livro> listarLivros() {
-        return livroRepository.findAll();
+            if (livros.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+
+            return new ResponseEntity<>(livros, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Busca um livro pelo id
-    @GetMapping("/{id}")
-    public ResponseEntity<Livro> buscarLivroPorId(@PathVariable Long id) {
-        return livroRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/livros/{id}")
+    public ResponseEntity<Livro> buscarLivroPorId(@PathVariable("id") long id) {
+        Optional<Livro> livroData = livroRepository.findById(id);
 
-    // Atualiza um livro existente
-    @PutMapping("/{id}")
-    public ResponseEntity<Livro> atualizarLivro(@PathVariable Long id, @RequestBody Livro dados) {
-        return livroRepository.findById(id)
-                .map(livro -> {
-                    livro.setTitulo(dados.getTitulo());
-                    livro.setAutor(dados.getAutor());
-                    livro.setIsbn(dados.getIsbn());
-                    livro.setAnoPublicacao(dados.getAnoPublicacao());
-                    return ResponseEntity.ok(livroRepository.save(livro));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Remove um livro
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarLivro(@PathVariable Long id) {
-        if (!livroRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        if (livroData.isPresent()) {
+            return new ResponseEntity<>(livroData.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        livroRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    }
+
+    // Cadastra um novo livro
+    @PostMapping("/livros")
+    public ResponseEntity<Livro> criarLivro(@RequestBody Livro livro) {
+        try {
+            Livro novoLivro = livroRepository.save(
+                    new Livro(livro.getTitulo(),
+                              livro.getAutor(),
+                              livro.getIsbn(),
+                              livro.getAnoPublicacao()));
+            return new ResponseEntity<>(novoLivro, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Atualiza um livro pelo id
+    @PutMapping("/livros/{id}")
+    public ResponseEntity<Livro> atualizarLivro(
+            @PathVariable("id") long id,
+            @RequestBody Livro livro) {
+        Optional<Livro> livroData = livroRepository.findById(id);
+
+        if (livroData.isPresent()) {
+            Livro livroExistente = livroData.get();
+            livroExistente.setTitulo(livro.getTitulo());
+            livroExistente.setAutor(livro.getAutor());
+            livroExistente.setIsbn(livro.getIsbn());
+            livroExistente.setAnoPublicacao(livro.getAnoPublicacao());
+            return new ResponseEntity<>(
+                    livroRepository.save(livroExistente), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // Remove um livro pelo id
+    @DeleteMapping("/livros/{id}")
+    public ResponseEntity<HttpStatus> deletarLivro(@PathVariable("id") long id) {
+        try {
+            livroRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Remove todos os livros
+    @DeleteMapping("/livros")
+    public ResponseEntity<HttpStatus> deletarTodosLivros() {
+        try {
+            livroRepository.deleteAll();
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Busca os livros de um autor
+    @GetMapping("/livros/autor/{autor}")
+    public ResponseEntity<List<Livro>> buscarPorAutor(@PathVariable("autor") String autor) {
+        try {
+            List<Livro> livros = livroRepository.findByAutor(autor);
+
+            if (livros.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(livros, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
